@@ -1,38 +1,150 @@
 # notify_email_send
 
-I create a program that will :
-
-- Ask the user to enter an email and a name (no values hard-coded).
-- Ensure a CSV exists with a header row (create it if missing).
-- Validate the email (basic check).
-- Append the new entry (email, name) to the CSV.
-- After successful storage, attempt to send a welcome email via SMTP.
-- Report success/failure and allow retry or add another entry
+A simple Python utility that lets users register (name + email), stores the data in a CSV file, and then attempts to send a “welcome” email via SMTP.
 
 ---
 
-## Main Process:
-✅ Create the format of the columns I want the csv to have
-✅ check if the csv exists and : 1. → if the csv doesn't exist then create it with the given format 2. → if the csv exists then append the new lines of data below the last entry
-✅ create the smtp server to send the emails
+## Table of Contents
 
-Get input → validate → ensure storage → optional duplicate check → write row → confirm write → send email → report + log.
+* [Features](#features)
+* [Prerequisites](#prerequisites)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Configuration](#configuration)
+* [How it works](#how-it-works)
+* [Validation & Error Handling](#validation--error-handling)
+* [Future Improvements / TODOs](#future-improvements--todos)
+* [License](#license)
 
-## Validation
+---
 
-1. The reason I used emailValidator is that it validates emails much more accurately than writing a regex, and can handle edge cases more efficiently.
+## Features
 
-2. <em>Syntax:</em> email parts in <b>email_validator library</b>:
-   - valid.email → normalized email, ready for storage/comparison.
-   - valid.local_part → the part before @.
-   - valid.domain → the domain part after @.
+* Prompt user to input **name** and **email** (no hard-coded values).
+* Maintains a CSV file (with header) for entries — auto-creates it if missing.
+* Validates email addresses using the `email_validator` library.
+* Appends new subscriber entries (name + normalized email).
+* Attempts to send a welcome email via SMTP.
+* Reports status (success/failure) and allows retry or adding more entries.
 
-3. What <b>"valid.email"</b> actually is:
+---
 
-- Lowercases the domain only (per RFC, domains are case-insensitive).
+## Prerequisites
 
-- Preserves the local part case (most providers treat local part case-insensitive, but technically it’s case-sensitive).
+* Python 3.7+
+* Access to an SMTP server (e.g. Gmail SMTP, or your own mail server)
+* Internet connection (for sending emails)
+* The `email_validator` Python package
 
-- Strips surrounding whitespace.
+You can install dependencies with:
 
-- Corrects minor formatting issues (if safe to do so).
+```bash
+pip install email-validator
+```
+
+---
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/VasilikiPapadimou/notify_email_send.git
+   cd notify_email_send
+   ```
+
+2. (Optional) Create a virtual environment:
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate   # on Linux / macOS
+   venv\Scripts\activate      # on Windows
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   If you do not have a `requirements.txt`, simply:
+
+   ```bash
+   pip install email-validator
+   ```
+
+---
+
+## Usage
+
+Run the main script:
+
+```bash
+python signup_notify.py
+```
+
+The program will:
+
+1. Ask for your **name** and **email**.
+2. Validate the email format.
+3. Ensure the CSV file exists (if not, create it with headers).
+4. Append the new entry to the CSV.
+5. Attempt to send a welcome email.
+6. Report success or failure.
+7. Offer options to retry sending or add another subscriber.
+
+---
+
+## Configuration
+
+Before running, you’ll likely need to configure your SMTP settings in the script (or via a config file if you extend it). Typical SMTP parameters include:
+
+* SMTP server host (e.g. `smtp.gmail.com`)
+* SMTP server port (e.g. `587` for TLS)
+* Username / password for authentication
+* Use TLS / SSL settings
+* Sender (“from”) email / name
+* Email subject / body templates
+
+You should locate the SMTP configuration section in **signup_notify.py** and update those values to match your email provider.
+
+---
+
+## How it works (internals)
+
+Here’s a rough flow of the program:
+
+1. **User Input**
+   Prompt for name & email.
+
+2. **Email Validation**
+   Use `email_validator` to parse and normalize the email. If invalid, prompt again.
+
+3. **CSV Handling**
+
+   * Check if file `subscribers.csv` (or whichever name you choose) exists.
+   * If not, create it and write a header row (e.g. `name,email`).
+   * Append the new row (name, normalized email).
+
+4. **Email Sending**
+
+   * Use the SMTP library (e.g. `smtplib`) to connect to the configured SMTP server.
+   * Log in (if needed).
+   * Format a welcome message (text or HTML).
+   * Send the email.
+
+5. **User Feedback / Retry**
+   If sending fails, show the error and ask whether to retry. Also, allow entering another name/email to repeat the process.
+
+---
+
+## Validation & Error Handling
+
+* Email validation is delegated to `email_validator`, which handles many edge cases better than a simple regex.
+* The library normalizes domains (lowercasing) and strips whitespace.
+* The script should catch SMTP / connection / authentication errors and display meaningful messages.
+* It should avoid silent failures.
+* Duplicate email detection is a possible extension (not currently present) to avoid repeated entries.
+
+
+
